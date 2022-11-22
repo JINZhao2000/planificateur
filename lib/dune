@@ -1,2 +1,4 @@
 (library
  (name planificateur))
+
+(env (dev (flags (:standard -w -27 -w -33 -w -50 -w -32))))
