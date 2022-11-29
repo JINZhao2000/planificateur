@@ -8,28 +8,23 @@ module type Graph = sig
   val is_empty : graph -> bool
   val add_vertex: node -> graph -> graph
   val add_edge: node * node * int -> graph -> graph
-  (* val succs : node -> graph -> NodeSet.t *)
 end
 
 module type S = sig
   type elt
   type t
-end
-
-module GraphImpl = struct
-  type node = string
-  type graph = node list * (node * node * int) list
-  module NodeSet = Set.Make(String)
-  let empty = ([], [])
-  let is_empty g = g = empty
-  let add_vertex n g = failwith "not inplemented"
-  let add_edge (n1, n2, w) g = failwith "not inplemented"
-  let add_vertex n g = failwith "not inplemented"
+  val empty : t
+  val is_empty : t -> bool
+  val add_transactions : (elt * elt * int) list -> t -> t
 end
 
 module Planificateur(G:Graph) = struct 
   type elt = G.node
   type t = G.graph
-end
 
-module PlanificateurImpl = Planificateur(GraphImpl)
+  let empty = G.empty
+  let is_empty t = G.is_empty t
+  let rec add_transactions el g = match el with
+  | [] -> g
+  | h::t -> add_transactions t @@ G.add_edge h g
+end
