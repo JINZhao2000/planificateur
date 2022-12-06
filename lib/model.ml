@@ -8,6 +8,10 @@ module type Graph = sig
   val is_empty : graph -> bool
   val add_vertex: node -> graph -> graph
   val add_edge: node * node * int -> graph -> graph
+  val succs : node -> graph -> NodeSet.t
+  val print_graph : graph -> unit
+  val dijkstra : node -> node -> graph -> node list
+  
 end
 
 module type S = sig
@@ -16,6 +20,7 @@ module type S = sig
   val empty : t
   val is_empty : t -> bool
   val add_transactions : (elt * elt * int) list -> t -> t
+  val print_g : t -> unit
 end
 
 module Planificateur(G:Graph) = struct 
@@ -27,4 +32,5 @@ module Planificateur(G:Graph) = struct
   let rec add_transactions el g = match el with
   | [] -> g
   | h::t -> add_transactions t @@ G.add_edge h g
+  let print_g g = G.print_graph g
 end

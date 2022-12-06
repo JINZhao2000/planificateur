@@ -7,9 +7,9 @@ let _ =
     let phase = int_of_string @@ Array.get Sys.argv 2 in
     if phase = 1 then
       let (t, ss) = Analyse.analyse_file_1 file in
-      let _ = PlanificateurImpl.(add_transactions t empty) in
+      let g = PlanificateurImpl.(add_transactions t empty) in
+      let _ = PlanificateurImpl.print_g g in
       let _ = 
-        List.fold_left (fun _ (b, e, t) -> output_string stdout @@ b ^ ", " ^ e ^ ", " ^ string_of_int t ^ "\n") () t;
         match ss with (start, stop) -> output_string stdout @@ start ^ ", " ^ stop ^ "\n" in
       let _ = Analyse.output_sol_1 2 ["a"; "c"] in ()
     else if phase = 2 then ()
