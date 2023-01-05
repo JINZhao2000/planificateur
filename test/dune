@@ -1,2 +1,5 @@
 (test
- (name planificateur))
+ (name testproj)
+ (libraries planificateur ounit2))
+(subdir dataset)
+(include_subdirs unqualified)

@@ -1,4 +1,4 @@
 (executable
  (public_name planificateur)
  (name main)
- (libraries planificateur))
+ (libraries planificateur ounit2))

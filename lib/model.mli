@@ -32,7 +32,7 @@ module type Graph = sig
     (** add a edge into a graph [add_edge (n1, n2, w) g]
         @param n1 first node
         @param n2 second node
-        @param w widget of edge
+        @param w weight of edge
         @param g a graph
         @return a new graph with edge (n1, n2, w) added *)
     val add_edge : node * node * int -> graph -> graph
@@ -43,16 +43,18 @@ module type Graph = sig
         @return a set of seccessor of node n *)
     val succs : node -> graph -> NodeSet.t
 
-    (** print a graph [print_graph g]
-        @param g a graph *)
-    val print_graph : graph -> unit
-
     (** find the shortest path [dijkstra n1 n2 g]
         @param n1 start
         @param n2 end
         @param g a graph
         @return the node list of path *)
-    val dijkstra : node -> node -> graph -> node list
+    val dijkstra : node -> node -> graph -> node list * int 
+
+    (** calculate the minimun time with the path declared 
+        @param plst a list of path declared
+        @param g a graph
+        @return a list of path with begin time *)
+    val min_time : node list list -> graph -> (node list * int list) list
 end
 
 (** T interface *)
@@ -78,9 +80,19 @@ module type S = sig
         @return new collection with added elements *)
     val add_transactions : (elt * elt * int) list -> t -> t
 
-    (** print the collection 
-        @param t the collection *)
-    val print_g : t -> unit
+    (** phase 1 find the shortest path for individual
+        @param t the path
+        @param ss the start point and the end point 
+        @return p the shortest path list and time
+        @raise Not_found when the path doesn't exist *)
+    val phase1 : (elt * elt * int) list * (elt * elt) -> elt list * int
+
+    (** phase 2 find the begin of path no conflicts
+        @param t the path
+        @param plst a list of path declared
+        @param g a graph
+        @return a list of path with begin time and the total time*)
+    val phase2 : (elt * elt * int) list * elt list list -> (elt list * int list) list * int
 end
 
 module Planificateur(G:Graph):S with type elt = G.node

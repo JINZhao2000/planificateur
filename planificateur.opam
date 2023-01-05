@@ -11,6 +11,7 @@ bug-reports: "https://github.com/JINZhao2000/projet-ipf-2022/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.5"}
+  "ounit2"
   "odoc" {with-doc}
 ]
 build: [

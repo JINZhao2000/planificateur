@@ -17,7 +17,7 @@
  (name planificateur)
  (synopsis "Planner")
  (description "A travel planner in a Martian base")
- (depends ocaml dune)
+ (depends ocaml dune ounit2)
  (tags
   ("graph")))
 
