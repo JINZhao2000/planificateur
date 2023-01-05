@@ -5,20 +5,18 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github JINZhao2000/projet-ipf-2022))
 
-(authors "Author Name")
+(authors "Zhao JIN")
 
-(maintainers "Maintainer Name")
+(maintainers "Zhao JIN")
 
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(license "Apache License 2.0")
 
 (package
  (name planificateur)
- (synopsis "Planificateur")
- (description "A longer description")
+ (synopsis "Planner")
+ (description "A travel planner in a Martian base")
  (depends ocaml dune)
  (tags
   ("graph")))

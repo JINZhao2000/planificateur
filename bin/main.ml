@@ -6,11 +6,9 @@ let _ =
     let file = Array.get Sys.argv 1 in
     let phase = int_of_string @@ Array.get Sys.argv 2 in
     if phase = 1 then
-      let (t, ss) = Analyse.analyse_file_1 file in
+      let (t, _) = Analyse.analyse_file_1 file in
       let g = PlanificateurImpl.(add_transactions t empty) in
       let _ = PlanificateurImpl.print_g g in
-      let _ = 
-        match ss with (start, stop) -> output_string stdout @@ start ^ ", " ^ stop ^ "\n" in
       let _ = Analyse.output_sol_1 2 ["a"; "c"] in ()
     else if phase = 2 then ()
     else if phase = 3 then ()

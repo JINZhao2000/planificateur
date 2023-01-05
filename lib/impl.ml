@@ -1,71 +1,103 @@
 module GraphImpl = struct
   type node = string
-  type graph = node list * (node * node * int) list
   module NodeSet = Set.Make(String)
   module NodeMap = Map.Make(String)
-  let empty = ([], [])
+  
+  type graph = NodeSet.t * (int NodeMap.t) NodeMap.t
+
+  let empty = (NodeSet.empty, NodeMap.empty)
+
   let is_empty g = g = empty
-  let mem_vertex n g = match g with (nl, _) ->
-    let find = List.find_opt (fun x -> x = n) nl in
-    match find with
+
+  let mem_vertex n g = match g with (ns, _) -> 
+    match NodeSet.find_opt n ns with
     | None -> (false, "")
-    | Some(n) -> (true, n)
-  let mem_edge (n1, n2, w) g = match g with (_, el) -> 
-    let find = List.find_opt 
-    (fun (n1', n2', w) -> (n1 = n1' && n2 = n2') || (n1 = n2' && n2 = n1')
-    ) el in
-    match find with
+    | Some(node) -> (true, node)
+
+  let mem_edge (n1, n2, w) g = match g with (_, nm) ->
+    if n1 = n2 then (false, ("", "", 0)) else
+    match NodeMap.find_opt n1 nm with
     | None -> (false, ("", "", 0))
-    | Some(e) -> (true, e)
-  let add_vertex n g = 
-    let (exist, _) = mem_vertex n g in 
-    if exist then g else
-    match g with (nl, el) -> (n::nl, el)
-  let add_edge (n1, n2, w) g = 
-    let (exist, _) = mem_edge (n1, n2, w) g in
-    if exist then g else
-    let g = add_vertex n1 g in
-    let g = add_vertex n2 g in
-    match g with (nl, el) -> 
-      (nl, (n1, n2, w)::el)
+    | Some(nm') -> 
+      begin match NodeMap.find_opt n2 nm' with
+      | None -> (false, ("", "", 0))
+      | Some(w') -> if w = w' then (true, (n1, n2, w)) else (false, ("", "", 0)) 
+      end
+
+  let add_vertex n g = match g with (ns, nm) -> 
+    (NodeSet.add n ns, nm)
+
+  let rec add_edge (n1, n2, w) g = match g with (ns, nm) ->
+    let g' = match NodeMap.find_opt n1 nm with
+    | None -> add_edge (n1, n2, w) (NodeSet.add n1 ns, NodeMap.add n1 NodeMap.empty nm)
+    | Some(nm') -> 
+      let m = NodeMap.add n2 w nm' in
+      (ns, NodeMap.add n1 m nm)
+    in
+    match g' with (ns, nm) ->
+      match NodeMap.find_opt n2 nm with
+      | None -> add_edge (n1, n2, w) (NodeSet.add n2 ns, NodeMap.add n2 NodeMap.empty nm)
+      | Some(nm') -> 
+        let m = NodeMap.add n1 w nm' in
+        (ns, NodeMap.add n2 m nm)
+
   let succs n g = 
     let (res, _) = mem_vertex n g in
-    if not res then NodeSet.empty else
-      match g with (_, el) -> 
-        List.fold_left 
-        (fun acc (f, t, w) -> 
-          if f = n then 
-            NodeSet.add t acc 
-          else if t = n then
-            NodeSet.add f acc
-          else
-            acc) 
-          NodeSet.empty el
-  let print_graph g = match g with (nl, el) -> 
-    let _ = List.fold_left (fun _ n -> output_string stdout @@ "Node : " ^ n ^ "\n") () nl in
-    let _ = List.fold_left (fun _ (f, t, w) -> output_string stdout @@ "Edge : " ^ f ^ "-" ^ (string_of_int w) ^ "->" ^ t ^ "\n") () el in ()
+    if res then
+      match g with (ns, nm) ->
+        match NodeMap.find_opt n nm with
+        | None -> NodeSet.empty
+        | Some(nm') -> NodeMap.fold (fun n _ acc -> NodeSet.add n acc) nm' NodeSet.empty
+    else
+      NodeSet.empty
+    
+  let print_graph g = match g with (ns, nm) -> 
+    Printf.fprintf stdout "nodes:\n";
+    NodeSet.fold (fun n _ -> Printf.fprintf stdout "\t%s\n" n) ns ();
+    Printf.fprintf stdout "edges:\n";
+    NodeMap.fold (fun n1 nm' _ -> 
+      NodeMap.fold (fun n2 w _ ->
+        Printf.fprintf stdout "\t%s->%s:%d\n" n1 n2 w;
+      ) nm' ()
+    ) nm ()
+
+  let rec convert_path_list m acc src dest = 
+    if src = dest then acc@[dest] else
+    let next = NodeMap.find src m in
+    convert_path_list m (acc@[src]) next dest
   
   let dijkstra src dest g = 
-    (* let (res1, _) = mem_vertex src g in
+    let (res1, _) = mem_vertex src g in
     let (res2, _) = mem_vertex dest g in
     if not (res1 && res2) then [] else
-    match g with (nl, el) ->
-    let dist = List.fold_left (fun d n -> NodeMap.add n (-1) d) NodeMap.empty nl in
-    let prev = List.fold_left (fun p n -> NodeMap.add n "" p) NodeMap.empty nl in
-    let q = nl in
+    match g with (ns, nm) -> 
+    let dist = NodeSet.fold (fun n acc -> NodeMap.add n (-1) acc) ns NodeMap.empty in
+    let prev = NodeSet.fold (fun n acc -> NodeMap.add n "" acc) ns NodeMap.empty in
+    let q = NodeSet.fold (fun n acc -> NodeSet.add n acc) ns NodeSet.empty in
     let dist = NodeMap.add src 0 dist in
-    let dijkstra0 q dist prev = 
-      if (List.length q = 0) then (dist, prev) else
-        let (u, w) = List.fold_left (fun (n, w) curr -> 
-          let w' = NodeMap.find curr dist in
-          if w' < 0 || w' >= w then
-            (n, w)
-          else
-            (curr, w')) ("", -1) q in
-        let dist = NodeMap.remove u dist in
-        (dist, []) in
-        not finished *)
-    []
+
+    let find_min m =
+      let (n, _) = NodeMap.fold (fun k v (mink, minv) -> 
+        if v = -1 then (k, v)
+        else if v < minv then (k, v)
+        else (mink, minv)) m ("", -1) in n in
+      
+    let rec dij dist prev q = 
+      if q = NodeSet.empty then
+        (dist, prev)
+      else
+        let u = find_min dist in
+        let q = NodeSet.remove u q in
+        let neigh = succs u g in
+        let neigh = NodeSet.filter (fun n -> NodeSet.mem n q) neigh in
+        let (dist, prev) = NodeSet.fold (
+          fun v (d, p) -> 
+            let alt = NodeMap.find u d + NodeMap.find v (NodeMap.find u nm) in
+            if alt < NodeMap.find v d then (NodeMap.add v alt d, NodeMap.add v u p) else (d, p)
+        ) neigh (dist, prev) in
+        dij dist prev q in
+    let (_, prev) = dij dist prev q in
+    convert_path_list prev [] src dest
 end
 
 module PlanificateurImpl = Model.Planificateur(GraphImpl)

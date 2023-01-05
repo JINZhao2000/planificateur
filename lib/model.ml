@@ -1,9 +1,10 @@
 exception Not_found
 
 module type Graph = sig
+  module NodeSet : Set.S
+  module NodeMap : Map.S
   type node 
   type graph
-  module NodeSet : Set.S with type elt = node
   val empty: graph
   val is_empty : graph -> bool
   val add_vertex: node -> graph -> graph
